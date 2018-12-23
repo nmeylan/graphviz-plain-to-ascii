@@ -12,8 +12,9 @@ public class AsciiRendererTest {
   public void shouldRenderGraphInAscii() throws IOException {
     // Given
     InputStream graphInputStream = this.getClass().getClassLoader().getResourceAsStream("fixtures/good_graph.txt");
+    AsciiRenderer asciiRenderer = new AsciiRenderer(graphInputStream);
     // When
-    OutputStream graph = AsciiRenderer.render(graphInputStream);
+    OutputStream graph = asciiRenderer.render();
     // Then
     System.out.println(graph);
   }
