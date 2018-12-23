@@ -52,12 +52,11 @@ public class AsciiRenderer {
   }
 
   /**
-   *
    * @param remainingNodes: Remaining nodes to render
-   * @param xUnitScale: unit scale for X axis
-   * @param graphWidth: Graph width
-   * @param graphHeight: Graph height
-   * @param graphRenderer: current graph renderer
+   * @param xUnitScale:     unit scale for X axis
+   * @param graphWidth:     Graph width
+   * @param graphHeight:    Graph height
+   * @param graphRenderer:  current graph renderer
    */
   private static void renderNodes(List<SimpleNode> remainingNodes, int xUnitScale, int graphWidth, int graphHeight, char[][] graphRenderer) {
     for (int y = 0; y <= graphHeight; y++) {
@@ -90,8 +89,8 @@ public class AsciiRenderer {
    * Render edges between nodes.
    *
    * @param graphRenderer: current graph renderer
-   * @param graph: current ext graph
-   * @param xUnitScale: unit scale for X axis
+   * @param graph:         current ext graph
+   * @param xUnitScale:    unit scale for X axis
    */
   public static void renderEdges(char[][] graphRenderer, SimpleGraph graph, int xUnitScale) {
     for (SimpleEdge edge : graph.getEdges()) {
@@ -133,7 +132,7 @@ public class AsciiRenderer {
           || graphRenderer[currentY][currentX] == '>') {
           prevY = currentY;
           prevX = currentX;
-          char symbol = getSymbol(diffX, diffY);
+            char symbol = getSymbol(diffX, diffY);
           graphRenderer[currentY][currentX] = symbol;
         }
       }
@@ -155,7 +154,7 @@ public class AsciiRenderer {
     if (diffY > 0) {
       if (diffX > 0) {
         symbol = '/';
-      } else if(diffX < 0) {
+      } else if (diffX < 0) {
         symbol = '\\';
       } else {
         symbol = '|';
@@ -163,7 +162,7 @@ public class AsciiRenderer {
     } else if (diffY < 0) {
       if (diffX > 0) {
         symbol = '\\';
-      } else if(diffX < 0) {
+      } else if (diffX < 0) {
         symbol = '/';
       } else {
         symbol = '|';
