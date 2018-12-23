@@ -1,18 +1,17 @@
 package com.nmeylan.graphviztoascii;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.List;
 
 public class AsciiRenderer {
 
-  private final static int X_UNIT_CHARS = 4; // 1 unit = 2 chars (SPACE)
-  private final static int Y_UNIT_CHARS = 5; // 1 unit = 5 chars (LF)
+  private final static int X_UNIT_CHARS = 3; // 1 unit = 2 chars (SPACE)
+  private final static int Y_UNIT_CHARS = 6; // 1 unit = 5 chars (LF)
   private final static char SPACE = ' ';
   private final static char LF = '\n';
+  private final static char[] OVERRIDABLE_CHARS = new char[]{SPACE, '-', '|', '←', '→', '↑', '↓'};
 
   /**
    * Graphviz PLAIN_EXT format represent a graph in the following carthesian 2D plan:
@@ -26,29 +25,32 @@ public class AsciiRenderer {
    * 0,0      0,1
    *
    * @param extFormatGraph: A graph in a Graphviz PLAIN_EXT format.
-   * @return output stream of the graph in ascii format.
+   * @return output stream of the graph in ascii format. Null is return in case of error.
    */
-  public static OutputStream render(InputStream extFormatGraph) throws IOException {
-    OutputStream graphOutput = new ByteArrayOutputStream();
-    PlainExtParser parser = new PlainExtParser();
-    SimpleGraph graph = parser.parse(extFormatGraph);
-    StringBuffer buffer = new StringBuffer();
-    List<SimpleNode> remainingNodes = graph.getNodes().subList(0, graph.getNodes().size());
-    int nodeNameMaxLength = graph.getNodes().stream().max(Comparator.comparingInt(n -> n.getName().length())).get().getName().length();
-    final int xUnitScale = X_UNIT_CHARS * nodeNameMaxLength;
-    int graphWidth = (int) Math.ceil(graph.getWidth() * xUnitScale);
-    int graphHeight = (int) Math.ceil(graph.getHeight() * Y_UNIT_CHARS);
-    char[][] graphRenderer = new char[graphHeight + 1][graphWidth + 1];
-    renderNodes(remainingNodes, xUnitScale, graphWidth, graphHeight, graphRenderer);
-    renderEdges(graphRenderer, graph, xUnitScale);
+  public static OutputStream render(InputStream extFormatGraph) {
+    try (OutputStream graphOutput = new ByteArrayOutputStream();
+         Writer writer = new OutputStreamWriter(graphOutput, Charset.forName("UTF-8"))) {
+      PlainExtParser parser = new PlainExtParser();
+      SimpleGraph graph = parser.parse(extFormatGraph);
+      List<SimpleNode> remainingNodes = graph.getNodes().subList(0, graph.getNodes().size());
+      int nodeNameMaxLength = graph.getNodes().stream().max(Comparator.comparingInt(n -> n.getName().length())).get().getName().length();
+      final int xUnitScale = X_UNIT_CHARS * (nodeNameMaxLength > 1 ? nodeNameMaxLength / 3 : nodeNameMaxLength);
+      int graphWidth = (int) Math.ceil(graph.getWidth() * xUnitScale);
+      int graphHeight = (int) Math.ceil(graph.getHeight() * Y_UNIT_CHARS);
+      char[][] graphRenderer = new char[graphHeight + 1][graphWidth + 1];
+      renderNodes(remainingNodes, xUnitScale, graphWidth, graphHeight, graphRenderer);
+      renderEdges(graphRenderer, graph, xUnitScale);
 
-    for (int y = graphRenderer.length - 1; y > 0; y--) {
-      for (int x = 0; x < graphRenderer[0].length; x++) {
-        graphOutput.write(graphRenderer[y][x]);
+      for (int y = graphRenderer.length - 1; y > 0; y--) {
+        for (int x = 0; x < graphRenderer[0].length; x++) {
+          writer.write(graphRenderer[y][x]);
+        }
       }
+      return graphOutput;
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-
-    return graphOutput;
+    return null;
   }
 
   /**
@@ -104,42 +106,82 @@ public class AsciiRenderer {
       int prevY = -1;
       int diffX = currentX - targetX;
       int diffY = currentY - targetY;
+      int changeX = 0;
+      int changeY = 0;
       boolean isSameX = diffX == 0;
       boolean isSameY = diffY == 0;
 
       while (!isSameY || !isSameX) {
         if (!isSameY) {
-          if (diffY < 0) {
+          if (Math.abs(diffX) > 3) {
+            changeY = 0;
+          } else if (diffY < 0) {
             currentY++;
+            changeY = 1;
           } else {
             currentY--;
+            changeY = -1;
           }
+        } else {
+          changeY = 0;
         }
         if (!isSameX) {
           if (diffX < 0) {
             currentX++;
+            changeX = 1;
           } else {
             currentX--;
+            changeX = -1;
           }
+        } else {
+          changeX = 0;
         }
         diffX = currentX - targetX;
         diffY = currentY - targetY;
         isSameX = diffX == 0;
         isSameY = diffY == 0;
-        if (graphRenderer[currentY][currentX] == SPACE
-          || graphRenderer[currentY][currentX] == '-'
-          || graphRenderer[currentY][currentX] == '|'
-          || graphRenderer[currentY][currentX] == '>') {
+        if (doesCharCanBeOverride(graphRenderer[currentY][currentX])) {
           prevY = currentY;
           prevX = currentX;
-            char symbol = getSymbol(diffX, diffY);
+          char symbol = getSymbol(diffX, diffY);
           graphRenderer[currentY][currentX] = symbol;
         }
       }
       if (prevX > -1 && prevY > -1) {
-        graphRenderer[prevY][prevX] = '>';
+        char symbol = '>';
+        if (changeX > 0 && changeY > 0) {
+          symbol = '↗';
+        } else if (changeX > 0 && changeY < 0) {
+          symbol = '↘';
+        } else if (changeX < 0 && changeY > 0) {
+          symbol = '↖';
+        } else if (changeX < 0 && changeY < 0) {
+          symbol = '↙';
+        } else if (changeY == 0 && (changeX < 0 || changeX > 0)) {
+          if (prevY < currentY) {
+            symbol = '↑';
+          } else if (prevY > currentY) {
+            symbol = '↓';
+          } else {
+            symbol = changeX < 0 ? '←' : '→';
+          }
+        } else if (changeX == 0 && changeY > 0) {
+          symbol = '↑';
+        } else if (changeX == 0 && changeY < 0) {
+          symbol = '↓';
+        }
+        graphRenderer[prevY][prevX] = symbol;
       }
     }
+  }
+
+  private static boolean doesCharCanBeOverride(char character) {
+    for(char c : OVERRIDABLE_CHARS) {
+      if (character == c) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -152,18 +194,22 @@ public class AsciiRenderer {
   private static char getSymbol(int diffX, int diffY) {
     char symbol = '-';
     if (diffY > 0) {
-      if (diffX > 0) {
-        symbol = '/';
+      if (Math.abs(diffX) > 3) {
+
+      } else if (diffX > 0) {
+        symbol = '↗';
       } else if (diffX < 0) {
-        symbol = '\\';
+        symbol = '↘';
       } else {
         symbol = '|';
       }
     } else if (diffY < 0) {
-      if (diffX > 0) {
-        symbol = '\\';
+      if (Math.abs(diffX) > 3) {
+
+      } else if (diffX > 0) {
+        symbol = '↘';
       } else if (diffX < 0) {
-        symbol = '/';
+        symbol = '↗';
       } else {
         symbol = '|';
       }

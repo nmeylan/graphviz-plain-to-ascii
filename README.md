@@ -8,13 +8,16 @@ This graph
 Is rendered as this
 
 ```
-             
-   --->b     
-  a     \    
-   \     \   
-    ------->c
-         /   
-        /    
-       d     
+           
+    →b↘   
+   ↗   ↘  
+  a---↘ ↘ 
+       ↘ ↓
+        →c
+         ↑
+        ↗ 
+       ↗  
+     d↗   
+            
              
 ```
