@@ -1,22 +1,22 @@
 package com.nmeylan.graphviztoascii;
 
 /**
- * This enum is used to determine on which axis, edges should "go first"
+ * This enum is used to determine on which axis, edges should be "drawn first"
  * Example:
  * NONE:
- *     x            x
+ *     a            a
  *            ->     \
- *         y          -- y
+ *         b          -- b
  *
  * Y:
- *     x            x
+ *     a            a
  *            ->    |
- *         y        ---- y
+ *         b        ---- b
  *
  * X:
- *     x            x----
+ *     a            a----
  *            ->         |
- *         y             y
+ *         b             b
  */
 public enum RankAxis {
   NONE,

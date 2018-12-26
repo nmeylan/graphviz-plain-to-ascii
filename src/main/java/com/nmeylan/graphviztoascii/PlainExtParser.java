@@ -13,6 +13,11 @@ import java.util.List;
  */
 public class PlainExtParser {
 
+  /**
+   *
+   * @param extFormatGraph: Input stream of the graph in ext format
+   * @return
+   */
   public SimpleGraph parse(InputStream extFormatGraph) {
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(extFormatGraph))) {
       SimpleGraph graph = new SimpleGraph();

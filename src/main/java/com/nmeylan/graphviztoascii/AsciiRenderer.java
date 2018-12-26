@@ -2,15 +2,14 @@ package com.nmeylan.graphviztoascii;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
 public class AsciiRenderer {
 
-  private final static int X_UNIT_CHARS = 2; // 1 unit = 2 chars (SPACE)
-  private final static int Y_UNIT_CHARS = 3; // 1 unit = 5 chars (LF)
+  private final static int X_UNIT_CHARS = 6; // 1 unit = 6 chars (SPACE)
+  private final static int Y_UNIT_CHARS = 3; // 1 unit = 3 chars (LF)
   private final static char SPACE = ' ';
   private final static char LF = '\n';
   private final static char[] OVERRIDABLE_CHARS = new char[]{SPACE, '-', '|', '↗', '↙', '↖', '↗'};
@@ -24,25 +23,54 @@ public class AsciiRenderer {
   private final int xUnitScale;
   private final int yUnitScale;
 
+  /**
+   *
+   * @param extFormatGraph: Input stream of the graph in ext format
+   */
   public AsciiRenderer(InputStream extFormatGraph) {
     this(extFormatGraph, RankAxis.NONE);
   }
 
+  /**
+   *
+   * @param extFormatGraph: Input stream of the graph in ext format
+   * @param rankAxis: Indicate which axis should be privileged to draw edges.
+   *                @see RankAxis for more details
+   */
   public AsciiRenderer(InputStream extFormatGraph, RankAxis rankAxis) {
-    this(extFormatGraph, rankAxis, X_UNIT_CHARS, Y_UNIT_CHARS);
+    this(extFormatGraph, rankAxis, null, null);
   }
 
-  public AsciiRenderer(InputStream extFormatGraph, RankAxis rankAxis, int xUnitScale, int yUnitScale) {
+  /**
+   *
+   * @param extFormatGraph: Input stream of the graph in ext format
+   * @param rankAxis: Indicate which axis should be privileged to draw edges.
+   *                @see RankAxis for more details
+   * @param xUnitScale: This value can be used to defined how to scale position units in X axis.
+   *                  When node label are large, it is better to increase xUnitScale value.
+   *                  Example: If nodes labels length is 10 chars long in average, then use 10 as xUnitScale,
+   *                  gives a better result than 4.
+   * @param yUnitScale: This value can be used to defined how to scale position units in Y axis.
+   */
+  public AsciiRenderer(InputStream extFormatGraph, RankAxis rankAxis, Integer xUnitScale, Integer yUnitScale) {
     this.rankAxis = rankAxis;
     PlainExtParser parser = new PlainExtParser();
     graph = parser.parse(extFormatGraph);
     remainingNodes = graph.getNodes().subList(0, graph.getNodes().size());
     nodeNameMaxLength = graph.getNodes().stream().max(Comparator.comparingInt(n -> n.getName().length())).get().getName().length();
-    this.xUnitScale = xUnitScale;
-    this.yUnitScale = yUnitScale;
-    graphWidth = (int) Math.ceil(graph.getWidth() * xUnitScale) + nodeNameMaxLength;
-    graphHeight = (int) Math.ceil(graph.getHeight() * yUnitScale);
+    this.xUnitScale = xUnitScale == null ? getDefaultXUnitScale(nodeNameMaxLength) : xUnitScale;
+    this.yUnitScale = yUnitScale == null ? Y_UNIT_CHARS : yUnitScale;
+    graphWidth = (int) Math.ceil(graph.getWidth() * this.xUnitScale) + nodeNameMaxLength;
+    graphHeight = (int) Math.ceil(graph.getHeight() * this.yUnitScale);
     graphRenderer = new char[graphHeight + 1][graphWidth + 1];
+  }
+
+  private int getDefaultXUnitScale(int nodeNameMaxLength) {
+    if (nodeNameMaxLength > X_UNIT_CHARS) {
+      return nodeNameMaxLength;
+    } else {
+      return X_UNIT_CHARS;
+    }
   }
 
   /**
@@ -104,7 +132,7 @@ public class AsciiRenderer {
     }
   }
 
-  public void renderEdges() {
+  private void renderEdges() {
     for (SimpleEdge edge : graph.getEdges()) {
       List<ControlPoint> points = new LinkedList<>();
       points.add(new ControlPoint(edge.getTail().getX(), edge.getTail().getY()));

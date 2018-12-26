@@ -1,5 +1,8 @@
 package com.nmeylan.graphviztoascii;
 
+/**
+ * A simple node representation as it does not handle color and shape.
+ */
 public class SimpleNode {
   protected final String name;
   protected final double x;

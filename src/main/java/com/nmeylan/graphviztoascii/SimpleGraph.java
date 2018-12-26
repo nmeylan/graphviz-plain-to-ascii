@@ -3,6 +3,9 @@ package com.nmeylan.graphviztoascii;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A simple graph representation, as labels, style and color are not handled for nodes and edges.
+ */
 public class SimpleGraph {
   protected List<SimpleNode> nodes;
   protected List<SimpleEdge> edges;

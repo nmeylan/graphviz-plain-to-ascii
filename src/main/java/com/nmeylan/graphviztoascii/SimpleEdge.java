@@ -3,6 +3,9 @@ package com.nmeylan.graphviztoascii;
 import java.security.InvalidParameterException;
 import java.util.List;
 
+/**
+ * A simple edge representation as it does not handle labels, color and shape.
+ */
 public class SimpleEdge {
   protected SimpleNode tail;
   protected SimpleNode head;

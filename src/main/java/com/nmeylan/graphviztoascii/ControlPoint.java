@@ -1,5 +1,8 @@
 package com.nmeylan.graphviztoascii;
 
+/**
+ * A point representation. We mostly use this to know how to draw edges.
+ */
 public class ControlPoint {
   private final double x;
   private final double y;

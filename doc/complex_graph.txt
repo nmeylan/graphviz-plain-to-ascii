@@ -1,0 +1,24 @@
+graph 1 9.3082 4.5
+node "KXYWE...SGOSU" 3.4059 1.25 2.1845 0.5 "KXYWE...SGOSU" solid ellipse black lightgrey
+node "OWYFP...GMJPR" 1.0448 0.25 2.0895 0.5 "OWYFP...GMJPR" solid ellipse black lightgrey
+node "UVMYC...RGTPP" 3.4059 0.25 2.144 0.5 "UVMYC...RGTPP" solid ellipse black lightgrey
+node "ERNHS...DARXO" 4.8642 2.25 2.1438 0.5 "ERNHS...DARXO" solid ellipse black lightgrey
+node "9XDQC...NIGLS" 5.7948 1.25 2.0071 0.5 "9XDQC...NIGLS" solid ellipse black lightgrey
+node "SBZZM...NDGLQ" 5.7948 0.25 2.1436 0.5 "SBZZM...NDGLQ" solid ellipse black lightgrey
+node "NGWYY...BZEW9" 8.2114 0.25 2.1934 0.5 "NGWYY...BZEW9" solid ellipse black lightgrey
+node "KZLM9...9APUJ" 6.3226 3.25 1.9936 0.5 "KZLM9...9APUJ" solid ellipse black lightgrey
+node "CTCMY...SCEWX" 4.4476 4.25 2.1667 0.5 "CTCMY...SCEWX" solid ellipse black lightgrey
+node "EBLNX...DALUT" 4.017 3.25 2.1161 0.5 "EBLNX...DALUT" solid ellipse black lightgrey
+edge "KXYWE...SGOSU" "OWYFP...GMJPR" 4 2.8819 1.0281 2.5294 0.8788 2.0625 0.68105 1.6876 0.52227 solid black
+edge "KXYWE...SGOSU" "UVMYC...RGTPP" 4 3.4059 0.99766 3.4059 0.89071 3.4059 0.76353 3.4059 0.64468 solid black
+edge "ERNHS...DARXO" "KXYWE...SGOSU" 4 4.5186 2.013 4.3257 1.8807 4.0827 1.7141 3.873 1.5703 solid black
+edge "ERNHS...DARXO" "9XDQC...NIGLS" 4 5.0942 2.0028 5.2081 1.8805 5.3474 1.7308 5.4717 1.5972 solid black
+edge "9XDQC...NIGLS" "SBZZM...NDGLQ" 4 5.7948 0.99766 5.7948 0.89071 5.7948 0.76353 5.7948 0.64468 solid black
+edge "9XDQC...NIGLS" "NGWYY...BZEW9" 4 6.3132 1.0355 6.6742 0.88609 7.1588 0.68557 7.548 0.52452 solid black
+edge "KZLM9...9APUJ" "KXYWE...SGOSU" 7 6.3408 2.9999 6.3468 2.7201 6.3116 2.2706 6.0587 2 5.9355 1.8682 5.0371 1.6315 4.3195 1.4591 solid black
+edge "KZLM9...9APUJ" "ERNHS...DARXO" 4 5.9769 3.013 5.784 2.8807 5.541 2.7141 5.3314 2.5703 solid black
+edge "CTCMY...SCEWX" "KXYWE...SGOSU" 7 3.6554 4.0772 3.3449 3.9665 3.0197 3.7875 2.8364 3.5 2.4606 2.9105 2.8558 2.0866 3.1495 1.6168 solid black
+edge "CTCMY...SCEWX" "KZLM9...9APUJ" 4 4.8824 4.0181 5.147 3.877 5.4874 3.6954 5.7708 3.5443 solid black
+edge "EBLNX...DALUT" "KXYWE...SGOSU" 7 3.8834 2.9989 3.8118 2.8559 3.7268 2.6716 3.6698 2.5 3.5767 2.2198 3.509 1.893 3.4656 1.6438 solid black
+edge "EBLNX...DALUT" "ERNHS...DARXO" 4 4.2264 3.0028 4.3283 2.8826 4.4525 2.736 4.5642 2.6042 solid black
+stop
