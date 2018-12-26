@@ -2,7 +2,9 @@ package com.nmeylan.graphviztoascii;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class AsciiRenderer {
@@ -11,7 +13,7 @@ public class AsciiRenderer {
   private final static int Y_UNIT_CHARS = 3; // 1 unit = 5 chars (LF)
   private final static char SPACE = ' ';
   private final static char LF = '\n';
-  private final static char[] OVERRIDABLE_CHARS = new char[]{SPACE, '-', '|', '↗', '↙', '↖','↗'};
+  private final static char[] OVERRIDABLE_CHARS = new char[]{SPACE, '-', '|', '↗', '↙', '↖', '↗'};
   private RankAxis rankAxis;
   private SimpleGraph graph;
   private List<SimpleNode> remainingNodes;
@@ -104,89 +106,95 @@ public class AsciiRenderer {
 
   public void renderEdges() {
     for (SimpleEdge edge : graph.getEdges()) {
-      SimpleNode head = edge.getHead();
-      SimpleNode tail = edge.getTail();
-      int currentX = (int) Math.ceil(tail.getX(xUnitScale));
-      int currentY = (int) Math.ceil(tail.getY(yUnitScale));
-      int targetX = (int) Math.ceil(head.getX(xUnitScale));
-      int targetY = (int) Math.ceil(head.getY(yUnitScale));
-      int prevX = -1;
-      int prevY = -1;
-      int diffX = currentX - targetX;
-      int diffY = currentY - targetY;
-      int changeX = 0;
-      int changeY = 0;
-      boolean isSameX = diffX == 0;
-      boolean isSameY = diffY == 0;
+      List<ControlPoint> points = new LinkedList<>();
+      points.add(new ControlPoint(edge.getTail().getX(), edge.getTail().getY()));
+      points.addAll(edge.getControlPoints());
+      points.add(new ControlPoint(edge.getHead().getX(), edge.getHead().getY()));
+      for (int i = 0; i < points.size() - 1; i++) {
+        ControlPoint from = points.get(i);
+        ControlPoint to = points.get(i + 1);
+        int currentX = (int) Math.ceil(from.getX(xUnitScale));
+        int currentY = (int) Math.ceil(from.getY(yUnitScale));
+        int targetX = (int) Math.ceil(to.getX(xUnitScale));
+        int targetY = (int) Math.ceil(to.getY(yUnitScale));
+        int prevX = -1;
+        int prevY = -1;
+        int diffX = currentX - targetX;
+        int diffY = currentY - targetY;
+        int changeX = 0;
+        int changeY = 0;
+        boolean isSameX = diffX == 0;
+        boolean isSameY = diffY == 0;
 
-      while (!isSameY || !isSameX) {
-        if (!isSameY) {
-          if (RankAxis.X == rankAxis && diffX > 3) {
+        while (!isSameY || !isSameX) {
+          if (!isSameY) {
+            if (RankAxis.X == rankAxis && diffX > 3) {
 
-          } else if (diffY < 0) {
-            currentY++;
-            changeY = 1;
+            } else if (diffY < 0) {
+              currentY++;
+              changeY = 1;
+            } else {
+              currentY--;
+              changeY = -1;
+            }
           } else {
-            currentY--;
-            changeY = -1;
+            changeY = 0;
           }
-        } else {
-          changeY = 0;
-        }
-        if (!isSameX) {
-          if (RankAxis.Y == rankAxis && diffY > 3) {
+          if (!isSameX) {
+            if (RankAxis.Y == rankAxis && diffY > 3) {
 
-          } else if (diffX < 0) {
-            currentX++;
-            changeX = 1;
+            } else if (diffX < 0) {
+              currentX++;
+              changeX = 1;
+            } else {
+              currentX--;
+              changeX = -1;
+            }
           } else {
-            currentX--;
-            changeX = -1;
+            changeX = 0;
           }
-        } else {
-          changeX = 0;
+          diffX = currentX - targetX;
+          diffY = currentY - targetY;
+          isSameX = diffX == 0;
+          isSameY = diffY == 0;
+          if (canCharBeOverride(graphRenderer[currentY][currentX])) {
+            prevY = currentY;
+            prevX = currentX;
+            char symbol = getSymbol(diffX, diffY, changeX, changeY);
+            graphRenderer[currentY][currentX] = symbol;
+          }
         }
-        diffX = currentX - targetX;
-        diffY = currentY - targetY;
-        isSameX = diffX == 0;
-        isSameY = diffY == 0;
-        if (canCharBeOverride(graphRenderer[currentY][currentX])) {
-          prevY = currentY;
-          prevX = currentX;
-          char symbol = getSymbol(diffX, diffY, changeX, changeY);
-          graphRenderer[currentY][currentX] = symbol;
-        }
-      }
-      if (prevX > -1 && prevY > -1) {
-        char symbol = '>';
-        if (changeX > 0 && changeY > 0) {
-          symbol = '↗';
-        } else if (changeX > 0 && changeY < 0) {
-          symbol = '↘';
-        } else if (changeX < 0 && changeY > 0) {
-          symbol = '↖';
-        } else if (changeX < 0 && changeY < 0) {
-          symbol = '↙';
-        } else if (changeY == 0 && (changeX < 0 || changeX > 0)) {
-          if (prevY < currentY) {
+        if (prevX > -1 && prevY > -1) {
+          char symbol = '>';
+          if (changeX > 0 && changeY > 0) {
+            symbol = '↗';
+          } else if (changeX > 0 && changeY < 0) {
+            symbol = '↘';
+          } else if (changeX < 0 && changeY > 0) {
+            symbol = '↖';
+          } else if (changeX < 0 && changeY < 0) {
+            symbol = '↙';
+          } else if (changeY == 0 && (changeX < 0 || changeX > 0)) {
+            if (prevY < currentY) {
+              symbol = '↑';
+            } else if (prevY > currentY) {
+              symbol = '↓';
+            } else {
+              symbol = changeX < 0 ? '←' : '→';
+            }
+          } else if (changeX == 0 && changeY > 0) {
             symbol = '↑';
-          } else if (prevY > currentY) {
+          } else if (changeX == 0 && changeY < 0) {
             symbol = '↓';
-          } else {
-            symbol = changeX < 0 ? '←' : '→';
           }
-        } else if (changeX == 0 && changeY > 0) {
-          symbol = '↑';
-        } else if (changeX == 0 && changeY < 0) {
-          symbol = '↓';
+          graphRenderer[prevY][prevX] = symbol;
         }
-        graphRenderer[prevY][prevX] = symbol;
       }
     }
   }
 
   private boolean canCharBeOverride(char character) {
-    for(char c : OVERRIDABLE_CHARS) {
+    for (char c : OVERRIDABLE_CHARS) {
       if (character == c) {
         return true;
       }
@@ -218,7 +226,8 @@ public class AsciiRenderer {
     } else if (changeY < 0) {
       if (RankAxis.X == rankAxis && diffX > 3) {
 
-      } if (changeX > 0) {
+      }
+      if (changeX > 0) {
         symbol = '↘';
       } else if (changeX < 0) {
         symbol = '↙';

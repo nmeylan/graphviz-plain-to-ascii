@@ -1,22 +1,22 @@
 package com.nmeylan.graphviztoascii;
 
 public class SimpleNode {
-  protected String name;
+  protected final String name;
   protected final double x;
   protected final double y;
+  protected final double width;
+  protected final double height;
 
-  public SimpleNode(String name, double x, double y) {
+  public SimpleNode(String name, double x, double y, double width, double height) {
     this.name = name;
     this.x = x;
     this.y = y;
+    this.width = width;
+    this.height = height;
   }
 
   public String getName() {
     return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public double getX() {
@@ -34,4 +34,11 @@ public class SimpleNode {
     return scale * getY();
   }
 
+  public double getWidth() {
+    return width;
+  }
+
+  public double getHeight() {
+    return height;
+  }
 }

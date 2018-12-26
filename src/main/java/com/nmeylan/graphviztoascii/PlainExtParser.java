@@ -7,11 +7,16 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A Plain ext parser implementation.
+ * Plain ext format: https://www.graphviz.org/doc/info/output.html#d:plain-ext
+ */
 public class PlainExtParser {
 
   public SimpleGraph parse(InputStream extFormatGraph) {
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(extFormatGraph))) {
-      SimpleGraph graph = new SimpleGraph();;
+      SimpleGraph graph = new SimpleGraph();
+      ;
       String line;
       while ((line = bufferedReader.readLine()) != null) {
         if (line.equalsIgnoreCase("stop")) {
@@ -21,7 +26,12 @@ public class PlainExtParser {
           graph = new SimpleGraph(Double.parseDouble(graphElements[1]), Double.parseDouble(graphElements[2]), Double.parseDouble(graphElements[3]));
         } else if (line.startsWith("node")) {
           String[] nodeElements = line.split(" ");
-          graph.addNode(new SimpleNode(nodeElements[1], Double.parseDouble(nodeElements[2]), Double.parseDouble(nodeElements[3])));
+          graph.addNode(new SimpleNode(
+            nodeElements[1],
+            Double.parseDouble(nodeElements[2]),
+            Double.parseDouble(nodeElements[3]),
+            Double.parseDouble(nodeElements[4]),
+            Double.parseDouble(nodeElements[5])));
         } else if (line.startsWith("edge")) {
           String[] edgeElements = line.split(" ");
           List<ControlPoint> controlPoints = new ArrayList<>();
