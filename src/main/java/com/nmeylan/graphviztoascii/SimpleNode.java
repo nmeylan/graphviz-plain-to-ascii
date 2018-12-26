@@ -2,10 +2,10 @@ package com.nmeylan.graphviztoascii;
 
 public class SimpleNode {
   protected String name;
-  protected Double x;
-  protected Double y;
+  protected final double x;
+  protected final double y;
 
-  public SimpleNode(String name, Double x, Double y) {
+  public SimpleNode(String name, double x, double y) {
     this.name = name;
     this.x = x;
     this.y = y;
@@ -19,26 +19,19 @@ public class SimpleNode {
     this.name = name;
   }
 
-  public Double getX() {
+  public double getX() {
     return x;
   }
-  public Double getX(double scale) {
+  public double getX(double scale) {
     return scale * getX();
   }
 
-  public void setX(Double x) {
-    this.x = x;
-  }
-
-  public Double getY() {
+  public double getY() {
     return y;
   }
 
-  public Double getY(double scale) {
+  public double getY(double scale) {
     return scale * getY();
   }
 
-  public void setY(Double y) {
-    this.y = y;
-  }
 }

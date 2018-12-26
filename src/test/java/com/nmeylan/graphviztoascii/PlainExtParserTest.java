@@ -23,6 +23,7 @@ public class PlainExtParserTest {
     assertThat(graph.getWidth()).isEqualTo(3.25);
     assertThat(graph.getHeight()).isEqualTo(1.7778);
     assertThat(graph.getEdges()).hasSize(4);
+    assertThat(graph.getEdges().get(0).getControlPoints()).hasSize(4);
     assertThat(graph.getNodes()).hasSize(4);
   }
 

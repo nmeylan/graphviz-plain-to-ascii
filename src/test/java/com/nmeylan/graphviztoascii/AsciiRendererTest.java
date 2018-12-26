@@ -18,4 +18,15 @@ public class AsciiRendererTest {
     // Then
     System.out.println(graph);
   }
+
+  @Test
+  public void shouldRenderComplexGraphInAscii() throws IOException {
+    // Given
+    InputStream graphInputStream = this.getClass().getClassLoader().getResourceAsStream("fixtures/complex_graph.txt");
+    AsciiRenderer asciiRenderer = new AsciiRenderer(graphInputStream, RankAxis.Y, 16, 6);
+    // When
+    OutputStream graph = asciiRenderer.render();
+    // Then
+    System.out.println(graph);
+  }
 }
