@@ -1,5 +1,7 @@
 package com.nmeylan.graphviztoascii;
 
+import org.omg.PortableInterceptor.DISCARDING;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Comparator;
@@ -13,7 +15,6 @@ public class AsciiRenderer {
   private final static char SPACE = ' ';
   private final static char LF = '\n';
   private final static char[] OVERRIDABLE_CHARS = new char[]{SPACE, '-', '|', '↗', '↙', '↖', '↗'};
-  private RankAxis rankAxis;
   private SimpleGraph graph;
   private List<SimpleNode> remainingNodes;
   private int nodeNameMaxLength;
@@ -24,36 +25,21 @@ public class AsciiRenderer {
   private final int yUnitScale;
 
   /**
-   *
    * @param extFormatGraph: Input stream of the graph in ext format
    */
   public AsciiRenderer(InputStream extFormatGraph) {
-    this(extFormatGraph, RankAxis.NONE);
+    this(extFormatGraph, null, null);
   }
 
   /**
-   *
    * @param extFormatGraph: Input stream of the graph in ext format
-   * @param rankAxis: Indicate which axis should be privileged to draw edges.
-   *                @see RankAxis for more details
+   * @param xUnitScale:     This value can be used to defined how to scale position units in X axis.
+   *                        When node label are large, it is better to increase xUnitScale value.
+   *                        Example: If nodes labels length is 10 chars long in average, then use 10 as xUnitScale,
+   *                        gives a better result than 4.
+   * @param yUnitScale:     This value can be used to defined how to scale position units in Y axis.
    */
-  public AsciiRenderer(InputStream extFormatGraph, RankAxis rankAxis) {
-    this(extFormatGraph, rankAxis, null, null);
-  }
-
-  /**
-   *
-   * @param extFormatGraph: Input stream of the graph in ext format
-   * @param rankAxis: Indicate which axis should be privileged to draw edges.
-   *                @see RankAxis for more details
-   * @param xUnitScale: This value can be used to defined how to scale position units in X axis.
-   *                  When node label are large, it is better to increase xUnitScale value.
-   *                  Example: If nodes labels length is 10 chars long in average, then use 10 as xUnitScale,
-   *                  gives a better result than 4.
-   * @param yUnitScale: This value can be used to defined how to scale position units in Y axis.
-   */
-  public AsciiRenderer(InputStream extFormatGraph, RankAxis rankAxis, Integer xUnitScale, Integer yUnitScale) {
-    this.rankAxis = rankAxis;
+  public AsciiRenderer(InputStream extFormatGraph, Integer xUnitScale, Integer yUnitScale) {
     PlainExtParser parser = new PlainExtParser();
     graph = parser.parse(extFormatGraph);
     remainingNodes = graph.getNodes().subList(0, graph.getNodes().size());
@@ -89,6 +75,13 @@ public class AsciiRenderer {
   public OutputStream render() {
     try (OutputStream graphOutput = new ByteArrayOutputStream();
          Writer writer = new OutputStreamWriter(graphOutput, Charset.forName("UTF-8"))) {
+      for (int i = 0; i < graphRenderer.length; i++) {
+        int j = 0;
+        for (j = 0; j < graphRenderer[0].length - 1; j++) {
+          graphRenderer[i][j] = SPACE;
+        }
+        graphRenderer[i][j] = LF;
+      }
 
       renderNodes();
       renderEdges();
@@ -117,13 +110,16 @@ public class AsciiRenderer {
           )
           .findFirst() // We suppose that nodes can't have same coordinates.
           .orElse(null);
-        if (node == null) {
-          graphRenderer[currentY][currentX] = SPACE;
-        } else {
+        if (node != null) {
           remainingNodes.remove(node);
           int i;
+          // recenter node name
+          int newNodeCenter = 0;
+          if (node.getName().length() > 6) {
+            newNodeCenter = (int) Math.floor((node.getWidth() / 3) * xUnitScale);
+          }
           for (i = 0; i < node.getName().length(); i++) {
-            graphRenderer[currentY][currentX + i] = node.getName().charAt(i);
+            graphRenderer[currentY][currentX - newNodeCenter + i] = node.getName().charAt(i);
           }
           x += i - 1;
         }
@@ -138,6 +134,7 @@ public class AsciiRenderer {
       points.add(new ControlPoint(edge.getTail().getX(), edge.getTail().getY()));
       points.addAll(edge.getControlPoints());
       points.add(new ControlPoint(edge.getHead().getX(), edge.getHead().getY()));
+      List<EdgePoint> drawPoints = new LinkedList<>();
       for (int i = 0; i < points.size() - 1; i++) {
         ControlPoint from = points.get(i);
         ControlPoint to = points.get(i + 1);
@@ -145,8 +142,6 @@ public class AsciiRenderer {
         int currentY = (int) Math.ceil(from.getY(yUnitScale));
         int targetX = (int) Math.ceil(to.getX(xUnitScale));
         int targetY = (int) Math.ceil(to.getY(yUnitScale));
-        int prevX = -1;
-        int prevY = -1;
         int diffX = currentX - targetX;
         int diffY = currentY - targetY;
         int changeX = 0;
@@ -156,9 +151,7 @@ public class AsciiRenderer {
 
         while (!isSameY || !isSameX) {
           if (!isSameY) {
-            if (RankAxis.X == rankAxis && diffX > 3) {
-
-            } else if (diffY < 0) {
+            if (diffY < 0) {
               currentY++;
               changeY = 1;
             } else {
@@ -169,9 +162,7 @@ public class AsciiRenderer {
             changeY = 0;
           }
           if (!isSameX) {
-            if (RankAxis.Y == rankAxis && diffY > 3) {
-
-            } else if (diffX < 0) {
+            if (diffX < 0) {
               currentX++;
               changeX = 1;
             } else {
@@ -185,39 +176,65 @@ public class AsciiRenderer {
           diffY = currentY - targetY;
           isSameX = diffX == 0;
           isSameY = diffY == 0;
-          if (canCharBeOverride(graphRenderer[currentY][currentX])) {
-            prevY = currentY;
-            prevX = currentX;
-            char symbol = getSymbol(diffX, diffY, changeX, changeY);
-            graphRenderer[currentY][currentX] = symbol;
-          }
+          drawPoints.add(new EdgePoint(Direction.get(changeX, changeY), currentX, currentY));
         }
-        if (prevX > -1 && prevY > -1) {
-          char symbol = '>';
-          if (changeX > 0 && changeY > 0) {
-            symbol = '↗';
-          } else if (changeX > 0 && changeY < 0) {
-            symbol = '↘';
-          } else if (changeX < 0 && changeY > 0) {
-            symbol = '↖';
-          } else if (changeX < 0 && changeY < 0) {
-            symbol = '↙';
-          } else if (changeY == 0 && (changeX < 0 || changeX > 0)) {
-            if (prevY < currentY) {
-              symbol = '↑';
-            } else if (prevY > currentY) {
-              symbol = '↓';
-            } else {
-              symbol = changeX < 0 ? '←' : '→';
-            }
-          } else if (changeX == 0 && changeY > 0) {
-            symbol = '↑';
-          } else if (changeX == 0 && changeY < 0) {
-            symbol = '↓';
-          }
-          graphRenderer[prevY][prevX] = symbol;
+
+      }
+      alterEdgePointDirection(drawPoints);
+      for (EdgePoint point : drawPoints) {
+        if (canCharBeOverride(graphRenderer[point.getY()][point.getX()])) {
+          graphRenderer[point.getY()][point.getX()] = point.getDirection().getSymbol();
         }
       }
+
+    }
+  }
+
+  /**
+   * This method alter edge points direction
+   *
+   * @param drawPoints: list a point to draw to represent an edge.
+   */
+  private void alterEdgePointDirection(List<EdgePoint> drawPoints) {
+    EdgePoint previousPoint = null;
+    for (int i = 0; i < drawPoints.size() - 2; i++) {
+      EdgePoint point = drawPoints.get(i);
+      EdgePoint nextPoint = drawPoints.get(i + 1);
+      if (previousPoint != null) {
+        /*
+          When there are successive →→ or ←←. replace them by -→ or ←-
+         */
+        if ((point.getDirection() == Direction.SOUTH && (previousPoint.getDirection() == Direction.SOUTH || previousPoint.getDirection() == Direction.VERTICAL))
+          || (point.getDirection() == Direction.NORTH && (previousPoint.getDirection() == Direction.NORTH || previousPoint.getDirection() == Direction.VERTICAL))) {
+          point.setDirection(Direction.VERTICAL);
+        }
+        /*
+          When there are successive
+          ↓ replace them by |       or ↑     replace them by ↑
+          ↓                 ↓          ↑                     |
+         */
+        else if ((point.getDirection() == Direction.EAST && (previousPoint.getDirection() == Direction.EAST) || previousPoint.getDirection() == Direction.HORIZONTAL)
+          || (point.getDirection() == Direction.WEST && (previousPoint.getDirection() == Direction.WEST || previousPoint.getDirection() == Direction.HORIZONTAL))) {
+          point.setDirection(Direction.HORIZONTAL);
+        }
+        /*
+          When there are
+          -           replace them by ↘
+           ↘                           ↘
+         */
+        if (point.getDirection() == Direction.HORIZONTAL) {
+          if (nextPoint.getDirection() == Direction.SOUTH_WEST) {
+            point.setDirection(Direction.SOUTH_WEST);
+          } else if (nextPoint.getDirection() == Direction.SOUTH_EAST) {
+            point.setDirection(Direction.SOUTH_EAST);
+          } else if (nextPoint.getDirection() == Direction.NORTH_EAST) {
+            point.setDirection(Direction.NORTH_EAST);
+          } else if (nextPoint.getDirection() == Direction.NORTH_WEST) {
+            point.setDirection(Direction.NORTH_WEST);
+          }
+        }
+      }
+      previousPoint = point;
     }
   }
 
@@ -228,41 +245,5 @@ public class AsciiRenderer {
       }
     }
     return false;
-  }
-
-  /**
-   * Get symbol to print.
-   *
-   * @param changeX: diff on X axis between 2 points
-   * @param changeY: diff on Y axis between 2 points
-   * @return which symbol should be printed to render edges.
-   */
-  private char getSymbol(int diffX, int diffY, int changeX, int changeY) {
-    char symbol = '-';
-    if (RankAxis.Y == rankAxis && diffY > 3) {
-      symbol = '|';
-    } else if (changeY > 0) {
-      if (RankAxis.X == rankAxis && diffX > 3) {
-
-      } else if (changeX > 0) {
-        symbol = '↗';
-      } else if (changeX < 0) {
-        symbol = '↖';
-      } else {
-        symbol = '|';
-      }
-    } else if (changeY < 0) {
-      if (RankAxis.X == rankAxis && diffX > 3) {
-
-      }
-      if (changeX > 0) {
-        symbol = '↘';
-      } else if (changeX < 0) {
-        symbol = '↙';
-      } else {
-        symbol = '|';
-      }
-    }
-    return symbol;
   }
 }

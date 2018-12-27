@@ -12,7 +12,7 @@ public class AsciiRendererTest {
   public void shouldRenderGraphInAscii() throws IOException {
     // Given
     InputStream graphInputStream = this.getClass().getClassLoader().getResourceAsStream("fixtures/good_graph.txt");
-    AsciiRenderer asciiRenderer = new AsciiRenderer(graphInputStream);
+    AsciiRenderer asciiRenderer = new AsciiRenderer(graphInputStream, 5, 7);
     // When
     OutputStream graph = asciiRenderer.render();
     // Then
@@ -23,7 +23,7 @@ public class AsciiRendererTest {
   public void shouldRenderComplexGraphInAscii() throws IOException {
     // Given
     InputStream graphInputStream = this.getClass().getClassLoader().getResourceAsStream("fixtures/complex_graph.txt");
-    AsciiRenderer asciiRenderer = new AsciiRenderer(graphInputStream, RankAxis.NONE, 10, 5);
+    AsciiRenderer asciiRenderer = new AsciiRenderer(graphInputStream, 10, 5);
     // When
     OutputStream graph = asciiRenderer.render();
     // Then
