@@ -134,14 +134,16 @@ public class AsciiRenderer {
       points.add(new ControlPoint(edge.getTail().getX(), edge.getTail().getY()));
       points.addAll(edge.getControlPoints());
       points.add(new ControlPoint(edge.getHead().getX(), edge.getHead().getY()));
-      List<EdgePoint> drawPoints = new LinkedList<>();
+      LinkedList<EdgePoint> drawPoints = new LinkedList<>();
+      int targetX = 0;
+      int targetY = 0;
       for (int i = 0; i < points.size() - 1; i++) {
         ControlPoint from = points.get(i);
         ControlPoint to = points.get(i + 1);
         int currentX = (int) Math.ceil(from.getX(xUnitScale));
         int currentY = (int) Math.ceil(from.getY(yUnitScale));
-        int targetX = (int) Math.ceil(to.getX(xUnitScale));
-        int targetY = (int) Math.ceil(to.getY(yUnitScale));
+        targetX = (int) Math.ceil(to.getX(xUnitScale));
+        targetY = (int) Math.ceil(to.getY(yUnitScale));
         int diffX = currentX - targetX;
         int diffY = currentY - targetY;
         int changeX = 0;
@@ -176,17 +178,61 @@ public class AsciiRenderer {
           diffY = currentY - targetY;
           isSameX = diffX == 0;
           isSameY = diffY == 0;
-          drawPoints.add(new EdgePoint(Direction.get(changeX, changeY), currentX, currentY));
+          if (canCharBeOverride(graphRenderer[currentY][currentX])) {
+            drawPoints.add(new EdgePoint(Direction.get(changeX, changeY), currentX, currentY));
+          }
         }
-
       }
       alterEdgePointDirection(drawPoints);
+      alterLastEdgePointDirection(drawPoints, targetX, targetY);
       for (EdgePoint point : drawPoints) {
-        if (canCharBeOverride(graphRenderer[point.getY()][point.getX()])) {
-          graphRenderer[point.getY()][point.getX()] = point.getDirection().getSymbol();
-        }
+        graphRenderer[point.getY()][point.getX()] = point.getDirection().getSymbol();
       }
 
+    }
+  }
+
+  /**
+   * Alter direction of the last edge point to draw
+   *
+   * @param drawPoints: List of points to draw
+   * @param targetX: last target X position
+   * @param targetY: last target Y position
+   */
+  private void alterLastEdgePointDirection(LinkedList<EdgePoint> drawPoints, int targetX, int targetY) {
+    EdgePoint beforeLastPoint = drawPoints.get(drawPoints.size() - 2);
+    EdgePoint lastPoint = drawPoints.getLast();
+    if (lastPoint.getY() == targetY) {
+      /*
+       When there are:
+                       ↙    Replace by                  ↙
+       "KXYWE...SGOSU"↙                 "KXYWE...SGOSU"←
+       */
+      if (lastPoint.getDirection() == Direction.SOUTH_EAST || lastPoint.getDirection() == Direction.NORTH_EAST) {
+        lastPoint.setDirection(Direction.EAST);
+      } else if (lastPoint.getDirection() == Direction.SOUTH_WEST || lastPoint.getDirection() == Direction.NORTH_WEST) {
+        lastPoint.setDirection(Direction.WEST);
+      }
+    }
+     /*
+       When there are:
+                   ↓↙    Replace by                 ↙
+       "KXYWE...SGOSU"                 "KXYWE...SGOSU"
+       */
+    else if (lastPoint.getY() == beforeLastPoint.getY()
+      && (beforeLastPoint.getDirection() == Direction.SOUTH_EAST || beforeLastPoint.getDirection() == Direction.SOUTH_WEST)
+      && targetY < lastPoint.getY() && lastPoint.getX() != targetX) {
+      lastPoint.setDirection(Direction.NULL);
+    }
+    /*
+       When there are:
+                 ↙-←↙        Replace by            ↓-←↙
+       "KXYWE...SGOSU"                   "KXYWE...SGOSU"
+       */
+    else if (targetY < lastPoint.getY() && lastPoint.getX() != targetX) {
+      lastPoint.setDirection(Direction.SOUTH);
+    } else if (targetY > lastPoint.getY() && lastPoint.getX() != targetX) {
+      lastPoint.setDirection(Direction.NORTH);
     }
   }
 
@@ -197,7 +243,7 @@ public class AsciiRenderer {
    */
   private void alterEdgePointDirection(List<EdgePoint> drawPoints) {
     EdgePoint previousPoint = null;
-    for (int i = 0; i < drawPoints.size() - 2; i++) {
+    for (int i = 0; i < drawPoints.size() - 1; i++) {
       EdgePoint point = drawPoints.get(i);
       EdgePoint nextPoint = drawPoints.get(i + 1);
       if (previousPoint != null) {
@@ -217,12 +263,27 @@ public class AsciiRenderer {
           || (point.getDirection() == Direction.WEST && (previousPoint.getDirection() == Direction.WEST || previousPoint.getDirection() == Direction.HORIZONTAL))) {
           point.setDirection(Direction.HORIZONTAL);
         }
+
+        /*
+          When there are
+            ←↙  OR  ↘→         replace them by    ↙  OR  ↘
+           ↙          ↘                         ↙          ↘
+
+         */
+        if ((point.getDirection() == Direction.EAST || point.getDirection() == Direction.WEST)
+          && ((nextPoint.getDirection() == Direction.SOUTH_WEST && previousPoint.getDirection() == Direction.SOUTH_WEST)
+          || (nextPoint.getDirection() == Direction.SOUTH_EAST && previousPoint.getDirection() == Direction.SOUTH_EAST)
+          || (nextPoint.getDirection() == Direction.NORTH_EAST && previousPoint.getDirection() == Direction.NORTH_EAST)
+          || (nextPoint.getDirection() == Direction.NORTH_WEST && previousPoint.getDirection() == Direction.NORTH_WEST))) {
+          point.setDirection(Direction.NULL);
+        }
         /*
           When there are
           -           replace them by ↘
            ↘                           ↘
          */
         if (point.getDirection() == Direction.HORIZONTAL) {
+
           if (nextPoint.getDirection() == Direction.SOUTH_WEST) {
             point.setDirection(Direction.SOUTH_WEST);
           } else if (nextPoint.getDirection() == Direction.SOUTH_EAST) {

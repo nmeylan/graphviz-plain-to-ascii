@@ -5,7 +5,7 @@ This graph
 
 ![Work tab](https://raw.githubusercontent.com/nmeylan/graphviz-plain-to-ascii/master/doc/ex1.png)
 
-Is rendered as this
+Is rendered like this
 
 ```
                                                                                                              
@@ -13,22 +13,22 @@ Is rendered as this
                                      ↙-----←↙ ↘→-↘                                                           
                                   ↙←↙             ↘→↘                                                        
                                ↙←↙                   ↘→↘                                                     
-                             ←↙                         ↘→↘                                                  
+                              ↙                         ↘→↓                                                  
                             ↙     "EBLNX...DALUT"         "KZLM9...9APUJ"                                    
-                           ↙            ↙ ↘→                ↙-←↙↓                                            
-                         ←↙            ↙    ↘             ←↙    |                                            
-                          ↘           ↙      ↘→         ←↙      |                                            
-                           ↘         ↙         ↘      ←↙        |                                            
+                           ↙            ↙ ↘                 ↙-←↙↓                                            
+                         ←↙            ↙    ↘              ↙    |                                            
+                          ↘           ↙      ↘           ↙      |                                            
+                           ↘         ↙         ↓       ↙        |                                            
                             ↘       ↙     "ERNHS...DARXO"       |                                            
-                             ↘      ↓         ↙←↙ ↘→           ↙                                             
-                              ↘     |       ←↙      ↘→      ↙←↙                                              
-                               ↘→  ↙     ↙←↙       ↙--↘---←↙                                                 
-                                 ↘ ↓   ←↙   ↙----←↙    ↘                                                     
-                            "KXYWE...SGOSU"↙        "9XDQC...NIGLS"                                          
+                             ↘      ↓         ↙←↙ ↘            ↙                                             
+                              ↘     |        ↙      ↘       ↙←↙                                              
+                               ↘   ↙     ↙←↙       ↙--↘---←↙                                                 
+                                 ↓ ↓    ↙   ↙----←↙    ↓                                                     
+                            "KXYWE...SGOSU"←        "9XDQC...NIGLS"                                          
                              ↙---←↙↓                      ↓↘→---↘                                            
                           ↙←↙      |                      |      ↘→↘                                         
                      ↙--←↙         |                      |         ↘→--↘                                    
-                 ↙-←↙              ↓                      ↓              ↘→-↘                                
+                 ↓-←↙              ↓                      ↓              ↘→-↓                                
      "OWYFP...GMJPR"        "UVMYC...RGTPP"        "SBZZM...NDGLQ"          "NGWYY...BZEW9"                  
                                                                                                              
 
